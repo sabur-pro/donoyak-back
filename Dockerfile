@@ -12,7 +12,7 @@ RUN npm ci
 
 RUN npx prisma generate
 
-COPY src ./src
+COPY . .
 
 RUN npm run build
 RUN ls -la dist/
