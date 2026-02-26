@@ -4,15 +4,18 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
+COPY nest-cli.json ./
+COPY tsconfig*.json ./
 COPY prisma ./prisma/
 
 RUN npm ci
 
 RUN npx prisma generate
 
-COPY . .
+COPY src ./src
 
 RUN npm run build
+RUN ls -la dist/
 
 # ── Stage 2: production ──
 FROM node:20-alpine
