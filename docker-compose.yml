@@ -1,0 +1,52 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: donoyak-api
+    restart: unless-stopped
+    expose:
+      - "4001"
+    env_file:
+      - .env
+    environment:
+      - VIRTUAL_HOST=api-donoyak.intelligent.tj
+      - VIRTUAL_PORT=4001
+      - LETSENCRYPT_HOST=api-donoyak.intelligent.tj
+      - LETSENCRYPT_EMAIL=meoutic@gmail.com
+      - PORT=4001
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-donoyak}:${POSTGRES_PASSWORD:-donoyak_secret}@donoyak-postgres:5432/${POSTGRES_DB:-donoyak_maps}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - donoyak-internal
+      - proxy-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: donoyak-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-donoyak}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-donoyak_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-donoyak_maps}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-donoyak}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - donoyak-internal
+
+volumes:
+  postgres_data:
+
+
+networks:
+  donoyak-internal:
+    driver: bridge
+  proxy-network:
+    external: true

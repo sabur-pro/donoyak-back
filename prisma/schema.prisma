@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  COURIER
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  login     String   @unique
+  password  String
+  role      Role     @default(COURIER)
+  courier   Courier?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TradePoint {
+  id          Int                 @id @default(autoincrement())
+  name        String
+  address     String
+  lat         Float
+  lng         Float
+  couriers    CourierTradePoint[]
+  routePoints RoutePoint[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model Courier {
+  id          Int                 @id @default(autoincrement())
+  name        String
+  phone       String?
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int                 @unique
+  tradePoints CourierTradePoint[]
+  routes      Route[]
+  sessions    RouteSession[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model CourierTradePoint {
+  courier      Courier    @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  courierId    Int
+  tradePoint   TradePoint @relation(fields: [tradePointId], references: [id], onDelete: Cascade)
+  tradePointId Int
+
+  @@id([courierId, tradePointId])
+}
+
+model Route {
+  id        Int            @id @default(autoincrement())
+  name      String
+  courier   Courier        @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  courierId Int
+  points    RoutePoint[]
+  sessions  RouteSession[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model RoutePoint {
+  id           Int        @id @default(autoincrement())
+  order        Int
+  route        Route      @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  routeId      Int
+  tradePoint   TradePoint @relation(fields: [tradePointId], references: [id], onDelete: Cascade)
+  tradePointId Int
+}
+
+model RouteSession {
+  id            Int       @id @default(autoincrement())
+  route         Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  routeId       Int
+  courier       Courier   @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  courierId     Int
+  startedAt     DateTime  @default(now())
+  finishedAt    DateTime?
+  trackPoints   Json      @default("[]")
+  totalDistance Float     @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
