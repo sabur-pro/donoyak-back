@@ -30,4 +30,4 @@ COPY --from=builder /app/tsconfig.json ./
 
 EXPOSE 4001
 
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/main.js"]
