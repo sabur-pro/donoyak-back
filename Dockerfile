@@ -15,7 +15,7 @@ RUN npx prisma generate
 COPY . .
 
 RUN npm run build
-RUN npx tsc prisma/seed.ts --outDir dist/seed --esModuleInterop --resolveJsonModule --skipLibCheck
+RUN ls -R dist/
 
 # ── Stage 2: production ──
 FROM node:20-alpine
@@ -29,4 +29,4 @@ COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 4001
 
-CMD ["sh", "-c", "npx prisma migrate deploy && (node dist/seed/prisma/seed.js || echo 'Seed skipped') && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
